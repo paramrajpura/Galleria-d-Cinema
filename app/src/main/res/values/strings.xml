@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Galleria d\'Cinema</string>
+    <string name="action_settings">Settings</string>
+    <string name="pref_sort_key">Sort</string>
+    <string name="pref_sort_title">Sort By</string>
+    <string name="title_activity_movie_detail">MovieDetailActivity</string>
+    <string name="release_date">Release Date:</string>
+    <string name="plot">Plot:</string>
+    <string name="user_rating">User Ratings:</string>
+
+</resources>
