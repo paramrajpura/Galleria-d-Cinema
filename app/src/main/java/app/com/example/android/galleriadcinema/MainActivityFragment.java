@@ -3,13 +3,17 @@
  */
 package app.com.example.android.galleriadcinema;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,6 +23,7 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,10 +46,10 @@ public class MainActivityFragment extends Fragment {
     public MainActivityFragment() {
     }
 
-    private ImageAdapter mImgAdapter;
+    protected ImageAdapter mImgAdapter;
     private int mPage = 1;
     private boolean mNextPage=false;
-    private ArrayList< MovieDetail > movieDetailList = new ArrayList<MovieDetail>();
+    protected ArrayList< MovieDetail > movieDetailList = new ArrayList<MovieDetail>();
 
     final String MOVIE_DETAIL_LIST = "MovieDetailList";
     final String SAVED_PAGE_NO = "SavedPageNumber";
@@ -87,7 +92,11 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        if(mImgAdapter.getCount()==0 && movieDetailList.isEmpty()){
+        boolean isConnected = checkInternetConnection();
+        if(!isConnected){
+            displayNoConnectionMessage();
+        }
+        if(mImgAdapter.getCount()==0 && movieDetailList.isEmpty() && isConnected){
             try {
                 updateMovieData(String.valueOf(mPage));
             } catch (ExecutionException | InterruptedException e) {
@@ -131,18 +140,21 @@ public class MainActivityFragment extends Fragment {
         gridview.setAdapter(mImgAdapter);
 
 
+
+
         final String INTENT_PARCEL_MOVIE_DETAILS = "MovieData";
 
         gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
-                Intent loadMovieDetails = new Intent(getContext(),MovieDetailActivity.class)
+                Intent loadMovieDetails = new Intent(getContext(), MovieDetailActivity.class)
                         .putExtra(INTENT_PARCEL_MOVIE_DETAILS, movieDetailList.get(position));
                 startActivity(loadMovieDetails);
             }
         });
 
         gridview.setOnScrollListener(new AbsListView.OnScrollListener() {
+
                                          @Override
                                          public void onScrollStateChanged
                                                  (AbsListView view, int scrollState) {
@@ -160,7 +172,11 @@ public class MainActivityFragment extends Fragment {
                                              }
 
                                              if ((lastInScreen == totalItemCount)) {
-                                                 if (mNextPage) {
+                                                 boolean isConnected = checkInternetConnection();
+                                                 if(!isConnected){
+                                                     displayNoConnectionMessage();
+                                                 }
+                                                 if (mNextPage && isConnected) {
                                                      mPage++;
                                                      mNextPage = false;
                                                      try {
@@ -182,129 +198,22 @@ public class MainActivityFragment extends Fragment {
     /**
      * Updates the list of Movie poster thumbnails using AsyncTask.
      */
-    private void updateMovieData(String pageNumber) throws ExecutionException, InterruptedException {
+    protected void updateMovieData(String pageNumber) throws ExecutionException, InterruptedException {
         FetchMovieDB checkDB = new FetchMovieDB();
-        checkDB.execute(pageNumber);
+        checkDB.execute(pageNumber, this);
     }
 
-    /**
-     * Async Task for retrieving movie details from TMDB.
-     */
-    public class FetchMovieDB extends AsyncTask<String, Void, String[]> {
-
-        @Override
-        protected void onPostExecute(String[] strings) {
-            mImgAdapter.setmThumbUrls(strings);
-            mImgAdapter.notifyDataSetChanged();
-            super.onPostExecute(strings);
-        }
-
-        @Override
-        protected String[] doInBackground(String... params) {
-
-            HttpURLConnection urlConnection;
-            BufferedReader reader;
-            final String SORT_BY_POPULARITY = "1";
-            final String QUERY_PAGE = "page";
-            final String QUERY_API_KEY = "api_key";
-            final String QUERY_SORTBY = "sort_by";
-            final String API_KEY = ""; //ENTER API KEY HERE
-
-            // Will contain the raw JSON response as a string.
-
-            Uri.Builder buildURL = new Uri.Builder();
-            SharedPreferences preferences = PreferenceManager.
-                    getDefaultSharedPreferences(getContext());
-
-            String sortingChoice = preferences.getString(getString(R.string.pref_sort_key),
-                    SORT_BY_POPULARITY );
-
-            buildURL.scheme("http").authority("api.themoviedb.org").appendPath("3")
-                    .appendPath("discover").appendPath("movie")
-                    .appendQueryParameter(QUERY_PAGE, params[0])
-                    .appendQueryParameter(QUERY_API_KEY,API_KEY );
-
-            if (sortingChoice.equals(SORT_BY_POPULARITY)){
-                buildURL.appendQueryParameter(QUERY_SORTBY, "popularity.desc");
-            }
-            else{
-                buildURL.appendQueryParameter(QUERY_SORTBY, "vote_average.desc");
-            }
-
-            try {
-                URL url = new URL(buildURL.build().toString());
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-
-                InputStream inputStream = urlConnection.getInputStream();
-                StringBuilder buffer = new StringBuilder();
-                if (inputStream == null) {
-                    return null;
-                }
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    buffer.append(line).append("\n");
-                }
-
-                if (buffer.length() == 0) {
-                    return null;
-                }
-
-                String mMovieDBStr = buffer.toString();
-                return extractMovieDetails(mMovieDBStr);
-
-            } catch (IOException | JSONException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        /**
-         * Returns list of url paths for poster thumbnails and extracts movie details for
-         * displaying in detail view.
-         */
-        private String[]  extractMovieDetails(String jsonMovieStr) throws JSONException {
-
-            final String TMDB_RESULT = "results";
-            final String TMDB_POSTER = "poster_path";
-            final String TMDB_BASE_URL_POSTER = "http://image.tmdb.org/t/p/w185/";
-            final String TMDB_BASE_URL_BACKDROP = "http://image.tmdb.org/t/p/w500/";
-
-            final String TMDB_RELEASE_DATE = "release_date";
-            final String TMDB_OVERVIEW = "overview";
-            final String TMDB_TITLE = "original_title";
-            final String TMDB_RATINGS = "vote_average";
-            final String TMDB_BACKDROP_PATH = "backdrop_path";
-
-
-
-            JSONObject movieDataJsonObj = new JSONObject(jsonMovieStr);
-            JSONArray resultsArray = movieDataJsonObj.getJSONArray(TMDB_RESULT);
-
-            int noOfMovies = resultsArray.length();
-            String[] posterPaths = new String[noOfMovies];
-            JSONObject movieData;
-            String path,date,plot,title,ratings,backdrop;
-            for(int i = 0; i < noOfMovies; i++) {
-                movieData = resultsArray.getJSONObject(i);
-                path = movieData.getString(TMDB_POSTER);
-
-                if( path != null ){
-                    date = movieData.getString(TMDB_RELEASE_DATE);
-                    plot = movieData.getString(TMDB_OVERVIEW);
-                    title = movieData.getString(TMDB_TITLE);
-                    ratings = movieData.getString(TMDB_RATINGS);
-                    backdrop = TMDB_BASE_URL_BACKDROP + movieData.getString(TMDB_BACKDROP_PATH);
-
-                    posterPaths[i] = TMDB_BASE_URL_POSTER + path;
-                    movieDetailList.add(new MovieDetail(title, posterPaths[i], plot, ratings,
-                            date, backdrop));
-                }
-            }
-            return posterPaths;
-        }
+    protected boolean checkInternetConnection(){
+        ConnectivityManager cm =
+                (ConnectivityManager)getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null &&
+                activeNetwork.isConnectedOrConnecting();
     }
+    protected void displayNoConnectionMessage(){
+            String NO_CONNECTION = "Requires connection to internet";
+            Toast.makeText(getContext(),NO_CONNECTION , Toast.LENGTH_SHORT).show();
+    }
+
+
 }
