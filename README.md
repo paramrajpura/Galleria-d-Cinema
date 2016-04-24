@@ -10,6 +10,4 @@ This product uses the TMDb API but is not endorsed or certified by TMDb.
 Usage Notes:
 Please Enter your API Key for TMDb in 
 
-Galleriad'Cinema\app\src\main\java\app\com\example\android\galleriadcinema\MainActivityFragment.java
-
-FetchMovieDB Class -> doInBackground -> API_KEY
+Galleriad'Cinema\app\src\main\java\app\com\example\android\galleriadcinema\Utility.java -> API_KEY

@@ -21,9 +21,11 @@ public class MovieDetail implements Parcelable {
     String userRating;
     String releaseDate;
     String backdropPath;
+    String movieId;
+    String[] trailerKeys;
 
     public MovieDetail(String title, String URL, String plot, String ratings,String date,
-                       String backdrop)
+                       String backdrop,String id,String[] videoKeys)
     {
         this.originalTitle = title;
         this.posterURL = URL;
@@ -31,7 +33,8 @@ public class MovieDetail implements Parcelable {
         this.userRating = ratings;
         this.releaseDate = date;
         this.backdropPath = backdrop;
-
+        this.movieId = id;
+        this.trailerKeys = videoKeys;
     }
 
     protected MovieDetail(Parcel in) {
@@ -41,6 +44,8 @@ public class MovieDetail implements Parcelable {
         userRating = in.readString();
         releaseDate = in.readString();
         backdropPath = in.readString();
+        movieId = in.readString();
+        trailerKeys = in.createStringArray();
     }
 
     public static final Creator<MovieDetail> CREATOR = new Creator<MovieDetail>() {
@@ -72,5 +77,7 @@ public class MovieDetail implements Parcelable {
         dest.writeString(userRating);
         dest.writeString(releaseDate);
         dest.writeString(backdropPath);
+        dest.writeString(movieId);
+        dest.writeStringArray(trailerKeys);
     }
 }

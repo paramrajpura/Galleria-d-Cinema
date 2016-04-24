@@ -7,5 +7,8 @@
     <string name="release_date">Release Date:</string>
     <string name="plot">Plot:</string>
     <string name="user_rating">User Ratings:</string>
-
+    <string name="title_activity_trailer">Trailers</string>
+    <string name="button_trailer">Watch Trailers</string>
+    <string name="button_reviews">Read Reviews</string>
+    <string name="title_activity_review">Reviews</string>
 </resources>

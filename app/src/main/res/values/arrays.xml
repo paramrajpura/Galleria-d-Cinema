@@ -3,9 +3,11 @@
     <string-array name="SortBy">
         <item>Popularity</item>
         <item>Ratings</item>
+        <item>Favorites</item>
     </string-array>
     <string-array name="SortValues">
         <item>1</item>
         <item>2</item>
+        <item>3</item>
     </string-array>
 </resources>
