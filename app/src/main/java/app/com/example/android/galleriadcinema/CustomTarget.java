@@ -3,6 +3,7 @@ package app.com.example.android.galleriadcinema;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Environment;
+import android.util.Log;
 
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
@@ -27,13 +28,16 @@ public class CustomTarget implements Target{
             public void run() {
 
                 File file = new File(
-                        Environment.getExternalStorageDirectory().getPath() + "/" +
+                        Environment.getExternalStorageDirectory().getAbsolutePath() + "/" +
                                 fileName+ ".jpg");
                 try {
-                    file.createNewFile();
-                    FileOutputStream ostream = new FileOutputStream(file);
-                    bitmap.compress(Bitmap.CompressFormat.JPEG,100,ostream);
-                    ostream.close();
+                    boolean isFileCreated = file.createNewFile();
+                    if(isFileCreated){
+                        FileOutputStream ostream = new FileOutputStream(file);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG,100,ostream);
+                        ostream.close();
+                    }
+
                 }
                 catch (Exception e) {
                     e.printStackTrace();

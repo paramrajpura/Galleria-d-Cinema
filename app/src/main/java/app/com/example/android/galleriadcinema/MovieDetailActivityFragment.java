@@ -4,13 +4,17 @@
 
 package app.com.example.android.galleriadcinema;
 
+import android.Manifest;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,9 +30,9 @@ import com.squareup.picasso.Target;
  * A placeholder fragment containing a scroll view for displaying movie details.
  */
 public class MovieDetailActivityFragment extends Fragment {
-
+    MovieDetail mMovieData = null;
     final String externalStoragePath = "file://" +
-            Environment.getExternalStorageDirectory().getPath() + "/";
+            Environment.getExternalStorageDirectory().getAbsolutePath() + "/";
 
     public MovieDetailActivityFragment() {
     }
@@ -40,7 +44,7 @@ public class MovieDetailActivityFragment extends Fragment {
         final String INTENT_PARCEL_MOVIE_DETAILS = "MovieData";
         View rootView = inflater.inflate(R.layout.fragment_movie_detail, container, false);
 
-        MovieDetail mMovieData = null;
+
         Bundle arguments = getArguments();
         if (arguments != null) {
             mMovieData = arguments.getParcelable(INTENT_PARCEL_MOVIE_DETAILS);
@@ -90,49 +94,80 @@ public class MovieDetailActivityFragment extends Fragment {
 
             FloatingActionButton favButton=
                     (FloatingActionButton) rootView.findViewById(R.id.favoriteFButton);
-            final MovieDetail finalMMovieData2 = mMovieData;
             favButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    String posterPath = "p"+ finalMMovieData2.movieId;
-                    String backdropPath = "b"+ finalMMovieData2.movieId;
 
-                    Target posterTarget = new CustomTarget(posterPath);
-                    Target backdropTarget = new CustomTarget(backdropPath);
-
-
-                    Picasso.with(getContext()).load(finalMMovieData2.posterURL).into(posterTarget);
-                    Picasso.with(getContext()).load(finalMMovieData2.backdropPath).into(backdropTarget);
-
-
-                    ContentValues cv = new ContentValues();
-                    cv.put(MovieColumns.MOVIE_ID, finalMMovieData2.movieId);
-                    cv.put(MovieColumns.MOVIE_NAME, finalMMovieData2.originalTitle);
-                    cv.put(MovieColumns.OVERVIEW, finalMMovieData2.overview);
-                    cv.put(MovieColumns.POSTER_PATH,externalStoragePath+posterPath+".jpg");
-                    cv.put(MovieColumns.THUMB_PATH,externalStoragePath+backdropPath+".jpg");
-                    cv.put(MovieColumns.RELEASE_DATE, finalMMovieData2.releaseDate);
-                    cv.put(MovieColumns.USER_RATINGS, finalMMovieData2.userRating);
-
-
-                    Cursor c = getActivity().getContentResolver().query(
-                            MovieProvider.Movies.withId(Integer.parseInt(finalMMovieData2.movieId)),
-                            null, null,null,null);
-
-                    if (c != null && c.getCount() == 0) {
-                        getActivity().getContentResolver().insert(MovieProvider.Movies.CONTENT_URI
-                                , cv);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        String[] perms = {"android.permission.WRITE_EXTERNAL_STORAGE",
+                                "android.permission.READ_EXTERNAL_STORAGE"};
+                        if (ContextCompat.checkSelfPermission(getContext(),
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                !=PackageManager.PERMISSION_GRANTED){
+                            int permsRequestCode = 200;
+                            requestPermissions(perms, permsRequestCode);
+                        }
+                        else{
+                            saveData();
+                        }
                     }
-                    if (c != null) {
-                        c.close();
-                    }
-
-                    Toast.makeText(getContext(),"Added as favorite",Toast.LENGTH_SHORT).show();
+                    else {saveData();}
 
                 }
             });
 
         }
         return rootView;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int permsRequestCode, String[] permissions, int[] grantResults){
+
+        switch(permsRequestCode){
+
+            case 200:
+                if(grantResults[0]== PackageManager.PERMISSION_GRANTED){
+                    saveData();
+                }
+                break;
+
+        }
+
+    }
+
+    private void saveData() {
+            String posterPath = "p"+ mMovieData.movieId;
+            String backdropPath = "b"+ mMovieData.movieId;
+
+            Target posterTarget = new CustomTarget(posterPath);
+            Target backdropTarget = new CustomTarget(backdropPath);
+            Picasso.with(getContext()).load(mMovieData.posterURL).
+                    into(posterTarget);
+            Picasso.with(getContext()).load(mMovieData.backdropPath).
+                    into(backdropTarget);
+
+            ContentValues cv = new ContentValues();
+            cv.put(MovieColumns.MOVIE_ID, mMovieData.movieId);
+            cv.put(MovieColumns.MOVIE_NAME, mMovieData.originalTitle);
+            cv.put(MovieColumns.OVERVIEW, mMovieData.overview);
+            cv.put(MovieColumns.POSTER_PATH,externalStoragePath+posterPath+".jpg");
+            cv.put(MovieColumns.THUMB_PATH,externalStoragePath+backdropPath+".jpg");
+            cv.put(MovieColumns.RELEASE_DATE, mMovieData.releaseDate);
+            cv.put(MovieColumns.USER_RATINGS, mMovieData.userRating);
+
+
+            Cursor c = getActivity().getContentResolver().query(
+                    MovieProvider.Movies.withId(Integer.parseInt(mMovieData.movieId)),
+                    null, null,null,null);
+
+            if (c != null && c.getCount() == 0) {
+                getActivity().getContentResolver().insert(MovieProvider.Movies.CONTENT_URI
+                        , cv);
+            }
+            if (c != null) {
+                c.close();
+            }
+
+            Toast.makeText(getContext(),"Added as favorite",Toast.LENGTH_SHORT).show();
     }
 }
