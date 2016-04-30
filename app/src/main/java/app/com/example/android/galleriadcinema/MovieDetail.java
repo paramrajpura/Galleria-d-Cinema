@@ -15,14 +15,14 @@ import android.os.Parcelable;
  * Contains movie details for displaying in Detail Fragment.
  */
 public class MovieDetail implements Parcelable {
-    String originalTitle;
-    String posterURL;
-    String overview;
-    String userRating;
-    String releaseDate;
-    String backdropPath;
-    String movieId;
-    String[] trailerKeys;
+    public String originalTitle;
+    public String posterURL;
+    public String overview;
+    public String userRating;
+    public String releaseDate;
+    public String backdropPath;
+    public String movieId;
+    public String[] trailerKeys;
 
     public MovieDetail(String title, String URL, String plot, String ratings,String date,
                        String backdrop,String id,String[] videoKeys)

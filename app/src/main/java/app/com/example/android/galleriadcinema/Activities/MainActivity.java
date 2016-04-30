@@ -1,12 +1,14 @@
 /*
  * Copyright (C) 2016 The Android Open Source Project
  */
-package app.com.example.android.galleriadcinema;
+package app.com.example.android.galleriadcinema.Activities;
 
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+
+import app.com.example.android.galleriadcinema.Fragments.MovieDetailActivityFragment;
+import app.com.example.android.galleriadcinema.R;
 
 public class MainActivity extends AppCompatActivity {
 

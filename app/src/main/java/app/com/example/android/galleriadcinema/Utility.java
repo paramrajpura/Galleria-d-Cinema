@@ -9,11 +9,17 @@ import android.net.NetworkInfo;
  */
 public class Utility {
     static String API_KEY = ""; //ENTER API KEY HERE
-    protected static boolean checkInternetConnection(Context context){
-        ConnectivityManager cm =
-                (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        return activeNetwork != null &&
-                activeNetwork.isConnectedOrConnecting();
+    public static boolean checkInternetConnection(Context context){
+        if(context!=null){
+            ConnectivityManager cm =
+                    (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+            return activeNetwork != null &&
+                    activeNetwork.isConnectedOrConnecting();
+        }
+        else{
+            return false;
+        }
+
     }
 }

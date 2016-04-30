@@ -15,12 +15,14 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import app.com.example.android.galleriadcinema.Fragments.ReviewActivityFragment;
+
 /**
  * Created by Admin on 09-Apr-16.
  */
 public class FetchReviews extends AsyncTask<Object, Void, String[]> {
     final String LOG_TAG = "FetchReviews";
-    reviewActivityFragment reviewFragment;
+    ReviewActivityFragment reviewFragment;
 
     @Override
     protected void onPostExecute(String[] strings) {
@@ -32,7 +34,7 @@ public class FetchReviews extends AsyncTask<Object, Void, String[]> {
     @Override
     protected String[] doInBackground(Object... params) {
 
-        reviewFragment = (reviewActivityFragment) params[2];
+        reviewFragment = (ReviewActivityFragment) params[2];
         final String QUERY_PAGE = "page";
         final String QUERY_API_KEY = "api_key";
         final String API_KEY = Utility.API_KEY;

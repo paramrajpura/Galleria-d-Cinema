@@ -19,8 +19,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
+import app.com.example.android.galleriadcinema.Fragments.MainActivityFragment;
 
 /**
  * Async Task for retrieving movie details from TMDB.
@@ -29,6 +32,7 @@ public class FetchMovieDB extends AsyncTask<Object, Void, String[]> {
 
 
     MainActivityFragment mainFragment;
+    private  WeakReference<MainActivityFragment> mMainFragmentReference;
     private final String QUERY_API_KEY = "api_key";
     private final String API_KEY = Utility.API_KEY;
     private final String LOG_TAG = "FetchDB";
@@ -39,7 +43,6 @@ public class FetchMovieDB extends AsyncTask<Object, Void, String[]> {
     static final int COL_THUMBPATH = 5;
     static final int COL_RELEASEDATE = 6;
     static final int COL_RATINGS = 7;
-
     @Override
     protected void onPostExecute(String[] strings) {
         if(strings!=null){
@@ -52,73 +55,72 @@ public class FetchMovieDB extends AsyncTask<Object, Void, String[]> {
     @Override
     protected String[] doInBackground(Object... params) {
 
-        mainFragment = (MainActivityFragment) params[1];
-
-
+        //mainFragment = (MainActivityFragment) params[1];
+        mMainFragmentReference = new WeakReference<>((MainActivityFragment) params[1]);
+        mainFragment = mMainFragmentReference.get();
         final String SORT_BY_POPULARITY = "1";
         final String FAVORITES = "3";
         final String QUERY_PAGE = "page";
 
+        if(mainFragment.getContext()!=null) {
+            Uri.Builder buildURL = new Uri.Builder();
+            SharedPreferences preferences = PreferenceManager.
+                    getDefaultSharedPreferences(mainFragment.getContext());
 
-        Uri.Builder buildURL = new Uri.Builder();
-        SharedPreferences preferences = PreferenceManager.
-                getDefaultSharedPreferences(mainFragment.getContext());
+
+            String sortingChoice = preferences.getString(mainFragment.getString(R.string.pref_sort_key),
+                    SORT_BY_POPULARITY);
+            if (sortingChoice.equals(FAVORITES)) {
+                Cursor c = mainFragment.getActivity().getContentResolver().query
+                        (MovieProvider.Movies.CONTENT_URI, null, null, null, null);
+                int totalMovies = 0;
+                if (c != null) {
+                    totalMovies = c.getCount();
+                }
+                String[] posterPaths = new String[totalMovies];
+                if (c != null && c.moveToFirst()) {
+
+                    String date, plot, title, ratings, backdrop, movie_id;
+                    for (int i = 0; i < totalMovies; i++) {
+                        date = c.getString(COL_RELEASEDATE);
+                        plot = c.getString(COL_OVERVIEW);
+                        title = c.getString(COL_MOVIE_NAME);
+                        ratings = c.getString(COL_RATINGS);
+                        movie_id = c.getString(COL_MOVIE_ID);
+                        backdrop = c.getString(COL_THUMBPATH);
+                        posterPaths[i] = c.getString(COL_POSTERPATH);
+                        try {
+                            mainFragment.movieDetailList.add(new MovieDetail(title, posterPaths[i], plot,
+                                    ratings, date, backdrop, movie_id, extractTrailerKeys(movie_id)));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        c.moveToNext();
+                    }
+                    c.close();
+                }
+                return posterPaths;
+            } else {
+                if (Utility.checkInternetConnection(mainFragment.getContext())) {
+                    buildURL.scheme("http").authority("api.themoviedb.org").appendPath("3").appendPath("movie");
 
 
-        String sortingChoice = preferences.getString(mainFragment.getString(R.string.pref_sort_key),
-                SORT_BY_POPULARITY);
-        if(sortingChoice.equals(FAVORITES)){
-            Cursor c = mainFragment.getActivity().getContentResolver().query
-                        (MovieProvider.Movies.CONTENT_URI, null, null,null,null);
-            int totalMovies = 0;
-            if (c != null) {
-                totalMovies = c.getCount();
-            }
-            String[] posterPaths = new String[totalMovies];
-            if (c != null && c.moveToFirst()) {
+                    if (sortingChoice.equals(SORT_BY_POPULARITY)) {
+                        buildURL.appendPath("popular");
+                    } else {
+                        buildURL.appendPath("top_rated");
+                    }
 
-                String date, plot, title, ratings, backdrop, movie_id;
-                for (int i = 0; i < totalMovies; i++) {
-                    date = c.getString(COL_RELEASEDATE);
-                    plot = c.getString(COL_OVERVIEW);
-                    title = c.getString(COL_MOVIE_NAME);
-                    ratings = c.getString(COL_RATINGS);
-                    movie_id = c.getString(COL_MOVIE_ID);
-                    backdrop = c.getString(COL_THUMBPATH);
-                    posterPaths[i] = c.getString(COL_POSTERPATH);
+                    buildURL.appendQueryParameter(QUERY_PAGE, (String) params[0])
+                            .appendQueryParameter(QUERY_API_KEY, API_KEY);
                     try {
-                        mainFragment.movieDetailList.add(new MovieDetail(title, posterPaths[i], plot,
-                                ratings, date, backdrop, movie_id, extractTrailerKeys(movie_id)));
+                        return extractMovieDetails(urlConnectFetchData(buildURL.build().toString()));
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                    c.moveToNext();
-                }
-                c.close();
-            }
-            return posterPaths;
-        }
-        else{
-            if(Utility.checkInternetConnection(mainFragment.getContext())){
-                buildURL.scheme("http").authority("api.themoviedb.org").appendPath("3").appendPath("movie");
-
-
-                if (sortingChoice.equals(SORT_BY_POPULARITY)) {
-                    buildURL.appendPath("popular");
-                } else {
-                    buildURL.appendPath("top_rated");
-                }
-
-                buildURL.appendQueryParameter(QUERY_PAGE, (String) params[0])
-                        .appendQueryParameter(QUERY_API_KEY, API_KEY);
-                try {
-                    return extractMovieDetails(urlConnectFetchData(buildURL.build().toString()));
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
             }
         }
-
 
         return null;
     }

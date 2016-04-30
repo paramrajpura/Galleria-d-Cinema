@@ -1,4 +1,4 @@
-package app.com.example.android.galleriadcinema;
+package app.com.example.android.galleriadcinema.Fragments;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -16,15 +16,19 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
 
+import app.com.example.android.galleriadcinema.ImageAdapter;
+import app.com.example.android.galleriadcinema.R;
+import app.com.example.android.galleriadcinema.Utility;
+
 /**
  * A placeholder fragment containing a simple view.
  */
-public class trailerActivityFragment extends Fragment {
+public class TrailerActivityFragment extends Fragment {
 
     ShareActionProvider mShareActionProvider;
 
     String mShareTrailerStr = "Trailers: ";
-    public trailerActivityFragment() {
+    public TrailerActivityFragment() {
     }
 
     @Override

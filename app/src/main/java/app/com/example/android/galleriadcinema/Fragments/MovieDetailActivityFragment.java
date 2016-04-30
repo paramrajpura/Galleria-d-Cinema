@@ -2,7 +2,7 @@
  * Copyright (C) 2016 The Android Open Source Project
  */
 
-package app.com.example.android.galleriadcinema;
+package app.com.example.android.galleriadcinema.Fragments;
 
 import android.Manifest;
 import android.content.ContentValues;
@@ -26,6 +26,14 @@ import android.widget.Toast;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
+import app.com.example.android.galleriadcinema.Activities.ReviewActivity;
+import app.com.example.android.galleriadcinema.Activities.TrailerActivity;
+import app.com.example.android.galleriadcinema.CustomTarget;
+import app.com.example.android.galleriadcinema.MovieColumns;
+import app.com.example.android.galleriadcinema.MovieDetail;
+import app.com.example.android.galleriadcinema.MovieProvider;
+import app.com.example.android.galleriadcinema.R;
+
 /**
  * A placeholder fragment containing a scroll view for displaying movie details.
  */
@@ -34,6 +42,7 @@ public class MovieDetailActivityFragment extends Fragment {
     final String externalStoragePath = "file://" +
             Environment.getExternalStorageDirectory().getAbsolutePath() + "/";
 
+    FloatingActionButton favButton;
     public MovieDetailActivityFragment() {
     }
 
@@ -74,7 +83,7 @@ public class MovieDetailActivityFragment extends Fragment {
             trailerButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent trailerList = new Intent(getContext(),trailerActivity.class)
+                    Intent trailerList = new Intent(getContext(),TrailerActivity.class)
                             .putExtra(TRAILER_KEY_TAG, finalMMovieData.trailerKeys);
                     startActivity(trailerList);
                 }
@@ -86,14 +95,24 @@ public class MovieDetailActivityFragment extends Fragment {
             reviewButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent loadReviews = new Intent(getContext(),reviewActivity.class)
+                    Intent loadReviews = new Intent(getContext(),ReviewActivity.class)
                             .putExtra(MOVIE_ID, finalMMovieData1.movieId);
                     startActivity(loadReviews);
                 }
             });
 
-            FloatingActionButton favButton=
-                    (FloatingActionButton) rootView.findViewById(R.id.favoriteFButton);
+            favButton= (FloatingActionButton) rootView.findViewById(R.id.favoriteFButton);
+            Cursor cCheckFav = getActivity().getContentResolver().query(
+                    MovieProvider.Movies.withId(Integer.parseInt(mMovieData.movieId)),
+                    null, null,null,null);
+            if(cCheckFav!=null){
+                if(cCheckFav.getCount()!=0){
+                    favButton.setImageResource(android.R.drawable.star_big_on);
+                }
+                cCheckFav.close();
+            }
+
+
             favButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -136,38 +155,45 @@ public class MovieDetailActivityFragment extends Fragment {
     }
 
     private void saveData() {
-            String posterPath = "p"+ mMovieData.movieId;
-            String backdropPath = "b"+ mMovieData.movieId;
+        String posterPath = "p"+ mMovieData.movieId;
+        String backdropPath = "b"+ mMovieData.movieId;
 
-            Target posterTarget = new CustomTarget(posterPath);
-            Target backdropTarget = new CustomTarget(backdropPath);
-            Picasso.with(getContext()).load(mMovieData.posterURL).
-                    into(posterTarget);
-            Picasso.with(getContext()).load(mMovieData.backdropPath).
-                    into(backdropTarget);
+        Target posterTarget = new CustomTarget(posterPath);
+        Target backdropTarget = new CustomTarget(backdropPath);
+        Picasso.with(getContext()).load(mMovieData.posterURL).
+                into(posterTarget);
+        Picasso.with(getContext()).load(mMovieData.backdropPath).
+                into(backdropTarget);
 
-            ContentValues cv = new ContentValues();
-            cv.put(MovieColumns.MOVIE_ID, mMovieData.movieId);
-            cv.put(MovieColumns.MOVIE_NAME, mMovieData.originalTitle);
-            cv.put(MovieColumns.OVERVIEW, mMovieData.overview);
-            cv.put(MovieColumns.POSTER_PATH,externalStoragePath+posterPath+".jpg");
-            cv.put(MovieColumns.THUMB_PATH,externalStoragePath+backdropPath+".jpg");
-            cv.put(MovieColumns.RELEASE_DATE, mMovieData.releaseDate);
-            cv.put(MovieColumns.USER_RATINGS, mMovieData.userRating);
+        ContentValues cv = new ContentValues();
+        cv.put(MovieColumns.MOVIE_ID, mMovieData.movieId);
+        cv.put(MovieColumns.MOVIE_NAME, mMovieData.originalTitle);
+        cv.put(MovieColumns.OVERVIEW, mMovieData.overview);
+        cv.put(MovieColumns.POSTER_PATH,externalStoragePath+posterPath+".jpg");
+        cv.put(MovieColumns.THUMB_PATH,externalStoragePath+backdropPath+".jpg");
+        cv.put(MovieColumns.RELEASE_DATE, mMovieData.releaseDate);
+        cv.put(MovieColumns.USER_RATINGS, mMovieData.userRating);
 
 
-            Cursor c = getActivity().getContentResolver().query(
-                    MovieProvider.Movies.withId(Integer.parseInt(mMovieData.movieId)),
-                    null, null,null,null);
-
-            if (c != null && c.getCount() == 0) {
+        Cursor c = getActivity().getContentResolver().query(
+                MovieProvider.Movies.withId(Integer.parseInt(mMovieData.movieId)),
+                null, null,null,null);
+        if(c!=null){
+            if (c.getCount() == 0) {
                 getActivity().getContentResolver().insert(MovieProvider.Movies.CONTENT_URI
                         , cv);
-            }
-            if (c != null) {
                 c.close();
+                favButton.setImageResource(android.R.drawable.star_big_on);
+                Toast.makeText(getContext(),"Added as favorite",Toast.LENGTH_SHORT).show();
             }
+            else{
+                getActivity().getContentResolver().delete(MovieProvider.Movies.withId(
+                        Integer.parseInt(mMovieData.movieId)),null,null);
+                favButton.setImageResource(android.R.drawable.star_big_off);
+                Toast.makeText(getContext(),"Removed from favorites",Toast.LENGTH_SHORT).show();
+            }
+        }
 
-            Toast.makeText(getContext(),"Added as favorite",Toast.LENGTH_SHORT).show();
+
     }
 }

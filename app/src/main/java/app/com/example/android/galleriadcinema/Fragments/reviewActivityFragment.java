@@ -1,4 +1,4 @@
-package app.com.example.android.galleriadcinema;
+package app.com.example.android.galleriadcinema.Fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,17 +16,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import app.com.example.android.galleriadcinema.FetchReviews;
+import app.com.example.android.galleriadcinema.R;
+import app.com.example.android.galleriadcinema.Utility;
+
 /**
  * A placeholder fragment containing a simple view.
  */
-public class reviewActivityFragment extends Fragment {
+public class ReviewActivityFragment extends Fragment {
 
     private int pageNumber = 1;
     private ArrayAdapter mListAdapter;
     private boolean mNextPage=true;
     private List<String> reviewList;
 
-    public reviewActivityFragment() {
+    public ReviewActivityFragment() {
     }
 
     @Override

@@ -1,14 +1,14 @@
 /*
  * Copyright (C) 2016 The Android Open Source Project
  */
-package app.com.example.android.galleriadcinema;
+package app.com.example.android.galleriadcinema.Fragments;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.util.Log;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -23,6 +23,15 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
+import app.com.example.android.galleriadcinema.Activities.MainActivity;
+import app.com.example.android.galleriadcinema.Activities.MovieDetailActivity;
+import app.com.example.android.galleriadcinema.Activities.SortActivity;
+import app.com.example.android.galleriadcinema.FetchMovieDB;
+import app.com.example.android.galleriadcinema.ImageAdapter;
+import app.com.example.android.galleriadcinema.MovieDetail;
+import app.com.example.android.galleriadcinema.R;
+import app.com.example.android.galleriadcinema.Utility;
+
 /**
  * A placeholder fragment containing a grid view.
  */
@@ -31,11 +40,10 @@ public class MainActivityFragment extends Fragment {
     public MainActivityFragment() {
     }
 
-    protected ImageAdapter mImgAdapter;
+    public ImageAdapter mImgAdapter;
     private int mPage = 1;
     private boolean mNextPage=false;
-    protected ArrayList< MovieDetail > movieDetailList = new ArrayList<MovieDetail>();
-
+    public ArrayList<MovieDetail> movieDetailList = new ArrayList<MovieDetail>();
     private static final String DETAILFRAGMENT_TAG = "DFTAG";
     final String MOVIE_DETAIL_LIST = "MovieDetailList";
     final String SAVED_PAGE_NO = "SavedPageNumber";
@@ -65,11 +73,6 @@ public class MainActivityFragment extends Fragment {
             startActivity(sort);
             return true;
         }
-        else if (id == R.id.action_settings) {
-            return true;
-        }
-
-
         return super.onOptionsItemSelected(item);
 
     }
@@ -101,7 +104,6 @@ public class MainActivityFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         mImgAdapter = new ImageAdapter(getContext());
         if (savedInstanceState != null && savedInstanceState.containsKey(MOVIE_DETAIL_LIST)){
             movieDetailList = savedInstanceState.getParcelableArrayList(MOVIE_DETAIL_LIST);
@@ -122,8 +124,6 @@ public class MainActivityFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         GridView gridview = (GridView) rootView.findViewById(R.id.gridview);
         gridview.setAdapter(mImgAdapter);
-
-
 
 
         final String INTENT_PARCEL_MOVIE_DETAILS = "MovieData";
@@ -218,6 +218,4 @@ public class MainActivityFragment extends Fragment {
         String NO_CONNECTION = "You are using Offline Mode";
         Toast.makeText(getContext(),NO_CONNECTION , Toast.LENGTH_SHORT).show();
     }
-
-
 }

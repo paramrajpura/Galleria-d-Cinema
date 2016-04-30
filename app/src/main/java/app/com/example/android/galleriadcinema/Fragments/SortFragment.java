@@ -2,13 +2,15 @@
  * Copyright (C) 2016 The Android Open Source Project
  */
 
-package app.com.example.android.galleriadcinema;
+package app.com.example.android.galleriadcinema.Fragments;
 
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+
+import app.com.example.android.galleriadcinema.R;
 
 /**
  * Created by Admin on 21-Feb-16.

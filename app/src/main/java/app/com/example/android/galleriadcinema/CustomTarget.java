@@ -18,7 +18,7 @@ public class CustomTarget implements Target{
 
     public String fileName;
 
-    CustomTarget(String defaultFileName){
+    public CustomTarget(String defaultFileName){
         fileName = defaultFileName;
     }
     @Override
